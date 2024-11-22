@@ -1,0 +1,192 @@
+---
+title: "Assignment 5"
+output: html_document
+date: "2024-11-22"
+---
+
+
+```{r part ausi}
+# Load necessary libraries
+library(readxl)
+library(readr)
+library(dplyr)
+
+# Load the data
+gene_expression_data <- read_excel("Gene_Expression_Data.xlsx")
+gene_information <- read.csv("Gene_Information.csv")
+sample_information <- read_tsv("Sample_Information.tsv")
+```
+
+
+
+```{r part b}
+# Assign phenotype labels from sample_information
+colnames(gene_expression_data)[-1] <- sample_information$patient
+
+head(gene_expression_data)
+```
+
+```{r part c}
+# Split the dataset based on tumor and normal columns
+tumor_data <- gene_expression_data %>%
+  select(Probe_ID, starts_with("tumor"))
+
+normal_data <- gene_expression_data %>%
+  select(Probe_ID, starts_with("normal"))
+```
+
+```{r part d}
+# Compute the average expression for tumor and normal datasets
+tumor_data <- tumor_data %>%
+  rowwise() %>%
+  mutate(Average_Tumor = mean(c_across(starts_with("tumor")), na.rm = TRUE))
+
+normal_data <- normal_data %>%
+  rowwise() %>%
+  mutate(Average_Normal = mean(c_across(starts_with("normal")), na.rm = TRUE))
+
+# Merge the results
+averaged_data <- merge(tumor_data %>% select(Probe_ID, Average_Tumor),
+                       normal_data %>% select(Probe_ID, Average_Normal),
+                       by = "Probe_ID")
+```
+
+```{r part e}
+# Calculate the log2 fold change
+averaged_data <- averaged_data %>%
+  mutate(Fold_Change = (Average_Tumor - Average_Normal) / Average_Normal)
+
+```
+
+```{r part f}
+# Filter genes with log2 fold change magnitude greater than 5
+filtered_data <- averaged_data %>%
+  filter(abs(Fold_Change) > 5)
+
+# Merge with gene information
+filtered_genes <- merge(filtered_data, gene_information, by = "Probe_ID")
+```
+
+
+```{r part g}
+# Add a column indicating if expression is higher in tumor or normal
+filtered_genes <- filtered_genes %>%
+  mutate(Higher_Expression_In = ifelse(Average_Tumor > Average_Normal, "Tumor", "Normal"))
+```
+
+
+
+Part 2
+
+```{r part a}
+# Examine the structure of the filtered_genes dataset
+str(filtered_genes)
+
+# Summary statistics
+summary(filtered_genes)
+
+# Distribution of fold changes
+library(ggplot2)
+ggplot(filtered_genes, aes(x = Fold_Change)) +
+  geom_histogram(binwidth = 0.5, fill = "blue", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribution of Fold Changes", x = "Fold Change", y = "Frequency")
+```
+
+```{r part b}
+# Histogram of DEGs by Chromosome
+ggplot(filtered_genes, aes(x = Chromosome)) +
+  geom_histogram(stat = "count", fill = "orange", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribution of DEGs by Chromosome", x = "Chromosome", y = "Number of DEGs") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+```{r part c}
+# Histogram segregated by higher expression in Tumor or Normal
+ggplot(filtered_genes, aes(x = Chromosome, fill = Higher_Expression_In)) +
+  geom_histogram(stat = "count", position = "dodge") +
+  theme_minimal() +
+  labs(title = "DEGs by Chromosome and Sample Type", x = "Chromosome", y = "Number of DEGs", fill = "Higher Expression") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r part d}
+# Calculate percentages
+deg_summary <- filtered_genes %>%
+  group_by(Higher_Expression_In) %>%
+  summarise(Count = n()) %>%
+  mutate(Percentage = (Count / sum(Count)) * 100)
+
+# Bar chart of percentages
+ggplot(deg_summary, aes(x = Higher_Expression_In, y = Percentage, fill = Higher_Expression_In)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title = "Percentage of DEGs Upregulated or Downregulated in Tumor", x = "Sample Type", y = "Percentage")
+
+```
+
+```{r part e}
+
+library(ggplot2)
+library(reshape2)
+
+# Prepare gene expression data for heatmap
+# Convert data to matrix and reshape
+gene_matrix <- as.matrix(gene_expression_data[, -1])  # Remove Probe_ID
+rownames(gene_matrix) <- gene_expression_data$Probe_ID
+
+# Reshape data for ggplot2
+gene_melt <- melt(gene_matrix)
+
+# Create heatmap
+ggplot(gene_melt, aes(Var2, Var1, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "red") +
+  theme_minimal() +
+  labs(
+    title = "Heatmap of Gene Expression",
+    x = "Samples",
+    y = "Genes",
+    fill = "Expression"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r part f}
+
+library(ggplot2)
+library(reshape2)
+library(stats)
+
+# Prepare the data
+gene_matrix <- as.matrix(gene_expression_data[, -1])  # Remove Probe_ID
+rownames(gene_matrix) <- gene_expression_data$Probe_ID
+
+# Perform hierarchical clustering on rows and columns
+row_dendrogram <- hclust(dist(gene_matrix))  # Cluster rows
+col_dendrogram <- hclust(dist(t(gene_matrix)))  # Cluster columns
+
+# Reorder rows and columns based on clustering
+gene_matrix <- gene_matrix[row_dendrogram$order, col_dendrogram$order]
+
+# Reshape for ggplot2
+gene_melt <- melt(gene_matrix)
+
+# Create clustermap
+ggplot(gene_melt, aes(Var2, Var1, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "red") +
+  theme_minimal() +
+  labs(
+    title = "Clustermap of Gene Expression",
+    x = "Samples",
+    y = "Genes",
+    fill = "Expression"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+The visualizations reveal that most genes exhibit modest expression changes, with a few showing extreme upregulation or downregulation, indicating stability between tumor and normal samples. Certain chromosomes, such as Chromosome X, show higher numbers of differentially expressed genes (DEGs), suggesting hotspots for differential expression. Tumor samples dominate in terms of higher expression for most genes, while some are more expressed in normal samples. The proportion of upregulated and downregulated DEGs in tumor samples highlights significant global transcriptional changes. Heatmaps and clustermaps demonstrate clear clustering patterns, with distinct expression profiles effectively separating tumor and normal groups.
+
+
+
