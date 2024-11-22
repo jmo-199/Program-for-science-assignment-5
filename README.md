@@ -10,7 +10,7 @@
 
 ## Description
 
-This project performs an exploratory data analysis (EDA) on gene expression data to investigate differences between tumor and normal samples. It includes preprocessing steps, statistical calculations, and visualizations such as heatmaps, clustermaps, bar charts, and histograms. Key findings like differentially expressed genes (DEGs), fold changes, and chromosome-level insights are summarized.
+This assignment performs an exploratory data analysis (EDA) on gene expression data to investigate differences between tumor and normal samples. It includes preprocessing steps, statistical calculations, and visualizations such as heatmaps, clustermaps, bar charts, and histograms. Key findings like differentially expressed genes (DEGs), fold changes, and chromosome-level insights are summarized.
 
 ---
 
