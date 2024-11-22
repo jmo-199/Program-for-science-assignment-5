@@ -20,6 +20,7 @@ This assignment performs an exploratory data analysis (EDA) on gene expression d
 2. **Gene_Information.csv**: Provides metadata, including gene symbols and chromosomal locations.
 3. **Sample_Information.tsv**: Includes sample metadata, linking each sample to its phenotype (tumor or normal).
 
+Use the .RDate file to upload the data for execution. Make sure to upload the files into the R studio so the file paths run correctly. 
 ---
 
 ## Required R Packages
@@ -31,11 +32,11 @@ The following R packages are used for data manipulation, statistical analysis, a
 - `reshape2`: For reshaping data into tidy formats.
 - `ggplot2`: To create heatmaps, histograms, and other visualizations.
 - `stats`: For hierarchical clustering.
-- `gplots`: To generate enhanced heatmaps (optional).
+   To generate enhanced heatmaps (optional).
 
 To install the packages, run:
 ```R
-install.packages(c("tidyverse", "readxl", "reshape2", "ggplot2", "gplots"))
+install.packages(c("tidyverse", "readxl", "reshape2", "ggplot2"))
 ```
 
 ---
