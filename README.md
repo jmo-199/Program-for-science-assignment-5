@@ -32,11 +32,11 @@ The following R packages are used for data manipulation, statistical analysis, a
 - `reshape2`: For reshaping data into tidy formats.
 - `ggplot2`: To create heatmaps, histograms, and other visualizations.
 - `stats`: For hierarchical clustering.
-   To generate enhanced heatmaps (optional).
+- `pheatmap`: To generate heatmaps
 
 To install the packages, run:
 ```R
-install.packages(c("tidyverse", "readxl", "reshape2", "ggplot2"))
+install.packages(c("tidyverse", "readxl", "reshape2", "ggplot2", "pheatmap"))
 ```
 
 ---
